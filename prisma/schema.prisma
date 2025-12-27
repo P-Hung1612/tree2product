@@ -1,0 +1,26 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Worker {
+  workerId     String   @id @default(uuid()) @map("worker_id")
+  name         String
+  employeeCode String   @map("employee_code")
+  role         String
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("workers")
+}
+
+model Shift {
+  shiftId   String   @id @default(uuid()) @map("shift_id")
+  date      DateTime
+  shiftCode String   @map("shift_code")
+
+  @@map("shifts")
+}
