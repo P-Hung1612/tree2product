@@ -7,20 +7,362 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Worker {
-  workerId     String   @id @default(uuid()) @map("worker_id")
-  name         String
-  employeeCode String   @map("employee_code")
-  role         String
-  createdAt    DateTime @default(now()) @map("created_at")
+// I. ENUMS
+enum LatexType {
+  NUOC
+  DONG
+  DAY
+  CHEN
+}
 
-  @@map("workers")
+enum BatchStatus {
+  CREATED
+  WEIGHED
+  CONFIRMED
+  READY_FOR_TRANSPORT
+  CONSUMED
+}
+
+enum VehicleLoadStatus {
+  CREATED
+  LOADED
+  IN_TRANSIT
+  ARRIVED
+}
+
+enum QcResult {
+  PASS
+  FAIL
+}
+
+enum ActionType {
+  CREATE
+  WEIGH
+  CONFIRM
+  APPROVE
+  REJECT
+  LOAD
+  DISPATCH
+  ARRIVE
+  START
+  COMPLETE
+}
+
+enum ProductType {
+  LY_TAM
+  SVR3L
+  SVRCV
+  RSS
+  SVR10
+}
+
+enum ProcessStepStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  APPROVED
+}
+
+// II. CORE MASTER DATA
+model Worker {
+  workerId     String @id @default(uuid()) @db.Uuid
+  name         String
+  employeeCode String @unique
+  role         String
+
+  harvestBatches  HarvestBatch[]
+  weightRecords   WeightRecord[]
+  vehicleLoads    VehicleLoad[]
+  materialEntries MaterialEntry[]
+  qcRecords       QcRecord[]
+  actionRecords   ActionRecord[]
+  stateHistory    StateHistory[]
 }
 
 model Shift {
-  shiftId   String   @id @default(uuid()) @map("shift_id")
-  date      DateTime
-  shiftCode String   @map("shift_code")
+  shiftId   String         @id @default(uuid()) @db.Uuid
+  workDate  DateTime       @db.Date
+  shiftCode String
+  batches   HarvestBatch[]
+}
 
-  @@map("shifts")
+// III. HARVEST & BATCH
+model HarvestBatch {
+  batchId       String      @id @default(uuid()) @db.Uuid
+  workerId      String?     @db.Uuid
+  shiftId       String?     @db.Uuid
+  latexType     LatexType
+  tappingAreaId String?     @db.Uuid
+  status        BatchStatus @default(CREATED)
+  createdAt     DateTime    @default(now())
+  confirmedAt   DateTime?
+
+  worker        Worker?        @relation(fields: [workerId], references: [workerId])
+  shift         Shift?         @relation(fields: [shiftId], references: [shiftId])
+  weightRecords WeightRecord[]
+
+  @@index([status])
+}
+
+model WeightRecord {
+  weightId  String   @id @default(uuid()) @db.Uuid
+  batchId   String?  @db.Uuid
+  netWeight Decimal  @db.Decimal(10, 2)
+  weighedBy String?  @db.Uuid
+  weighedAt DateTime
+
+  batch  HarvestBatch? @relation(fields: [batchId], references: [batchId])
+  worker Worker?       @relation(fields: [weighedBy], references: [workerId])
+}
+
+// IV. LOGISTICS
+model Vehicle {
+  vehicleId   String        @id @default(uuid()) @db.Uuid
+  plateNumber String        @unique
+  capacity    Decimal?      @db.Decimal(10, 2)
+  loads       VehicleLoad[]
+}
+
+model VehicleLoad {
+  loadId          String            @id @default(uuid()) @db.Uuid
+  vehicleId       String?           @db.Uuid
+  compartmentCode String
+  latexType       LatexType
+  status          VehicleLoadStatus @default(CREATED)
+  loadedAt        DateTime?
+  loadedBy        String?           @db.Uuid
+
+  vehicle Vehicle? @relation(fields: [vehicleId], references: [vehicleId])
+  worker  Worker?  @relation(fields: [loadedBy], references: [workerId])
+}
+
+// V. MATERIAL ENTRY POINTS
+model Tank {
+  tankId   String          @id @default(uuid()) @db.Uuid
+  tankCode String          @unique
+  type     String
+  // Thêm dòng này:
+  entries  MaterialEntry[]
+}
+
+model Yard {
+  yardId   String          @id @default(uuid()) @db.Uuid
+  yardCode String          @unique
+  location String?
+  // Thêm dòng này:
+  entries  MaterialEntry[]
+}
+
+model FermentationTank {
+  tankId   String          @id @default(uuid()) @db.Uuid
+  tankCode String          @unique
+  capacity Decimal?        @db.Decimal(10, 2)
+  // Thêm dòng này:
+  entries  MaterialEntry[]
+}
+
+model MaterialEntry {
+  entryId    String    @id @default(uuid()) @db.Uuid
+  receivedAt DateTime?
+  receivedBy String?   @db.Uuid
+
+  tankId    String? @db.Uuid
+  yardId    String? @db.Uuid
+  fermentId String? @db.Uuid
+
+  // Các trường quan hệ giữ nguyên
+  tank    Tank?             @relation(fields: [tankId], references: [tankId])
+  yard    Yard?             @relation(fields: [yardId], references: [yardId])
+  ferment FermentationTank? @relation(fields: [fermentId], references: [tankId])
+
+  worker Worker? @relation(fields: [receivedBy], references: [workerId])
+}
+
+// VI. PRODUCTION FLOW
+model Channel {
+  channelId   String        @id @default(uuid()) @db.Uuid
+  channelCode String        @unique
+  flows       ChannelFlow[]
+}
+
+model ChannelFlow {
+  channelFlowId String   @id @default(uuid()) @db.Uuid
+  channelId     String?  @db.Uuid
+  flowedAt      DateTime
+  channel       Channel? @relation(fields: [channelId], references: [channelId])
+}
+
+model SheetRolling {
+  rollingId   String      @id @default(uuid()) @db.Uuid
+  rollingDate DateTime    @db.Date
+  type        ProductType
+}
+
+model GongStack {
+  gongId     String @id @default(uuid()) @db.Uuid
+  gongNumber String
+}
+
+model Furnace {
+  furnaceId   String       @id @default(uuid()) @db.Uuid
+  furnaceCode String       @unique
+  runs        FurnaceRun[]
+}
+
+model FurnaceRun {
+  furnaceRunId String    @id @default(uuid()) @db.Uuid
+  furnaceId    String?   @db.Uuid
+  startedAt    DateTime?
+  endedAt      DateTime?
+  furnace      Furnace?  @relation(fields: [furnaceId], references: [furnaceId])
+}
+
+// VII. CONTAINER & LOT / WAREHOUSE
+model Container {
+  containerId   String          @id @default(uuid()) @db.Uuid
+  containerCode String          @unique
+  fills         ContainerFill[]
+}
+
+model ContainerFill {
+  fillId      String     @id @default(uuid()) @db.Uuid
+  containerId String?    @db.Uuid
+  filledAt    DateTime
+  container   Container? @relation(fields: [containerId], references: [containerId])
+}
+
+model ProductLot {
+  lotId       String      @id @default(uuid()) @db.Uuid
+  productType ProductType
+  createdAt   DateTime    @default(now())
+  inventory   Inventory[]
+}
+
+model Warehouse {
+  warehouseId String              @id @default(uuid()) @db.Uuid
+  name        String
+  location    String?
+  locations   WarehouseLocation[]
+}
+
+model WarehouseLocation {
+  locationId  String      @id @default(uuid()) @db.Uuid
+  warehouseId String?     @db.Uuid
+  code        String
+  warehouse   Warehouse?  @relation(fields: [warehouseId], references: [warehouseId])
+  inventory   Inventory[]
+}
+
+model Inventory {
+  inventoryId String   @id @default(uuid()) @db.Uuid
+  lotId       String?  @db.Uuid
+  locationId  String?  @db.Uuid
+  storedAt    DateTime
+  status      String?
+
+  productLot ProductLot?        @relation(fields: [lotId], references: [lotId])
+  location   WarehouseLocation? @relation(fields: [locationId], references: [locationId])
+}
+
+// VIII. PROCESS CONFIGURATION
+model ProcessDefinition {
+  processId   String                  @id @default(uuid()) @db.Uuid
+  productType ProductType
+  name        String
+  isActive    Boolean?                @default(true)
+  steps       ProcessStepDefinition[]
+  instances   ProcessInstance[]
+}
+
+model ProcessStepDefinition {
+  stepId           String   @id @default(uuid()) @db.Uuid
+  processId        String?  @db.Uuid
+  stepOrder        Int
+  entityType       String
+  requiresApproval Boolean? @default(true)
+
+  process   ProcessDefinition?    @relation(fields: [processId], references: [processId])
+  instances ProcessStepInstance[]
+}
+
+model ProcessInstance {
+  processInstanceId String    @id @default(uuid()) @db.Uuid
+  processId         String?   @db.Uuid
+  startedAt         DateTime?
+  endedAt           DateTime?
+  status            String?
+
+  process ProcessDefinition?    @relation(fields: [processId], references: [processId])
+  steps   ProcessStepInstance[]
+}
+
+model ProcessStepInstance {
+  stepInstanceId    String            @id @default(uuid()) @db.Uuid
+  processInstanceId String?           @db.Uuid
+  stepId            String?           @db.Uuid
+  entityType        String
+  entityId          String            @db.Uuid
+  status            ProcessStepStatus @default(PENDING)
+  startedAt         DateTime?
+  endedAt           DateTime?
+
+  processInstance ProcessInstance?       @relation(fields: [processInstanceId], references: [processInstanceId])
+  stepDefinition  ProcessStepDefinition? @relation(fields: [stepId], references: [stepId])
+}
+
+// IX. QC & ACTION
+model QcRecord {
+  qcId        String   @id @default(uuid()) @db.Uuid
+  entityType  String
+  entityId    String   @db.Uuid
+  qcType      String?
+  result      QcResult
+  inspectedBy String?  @db.Uuid
+  inspectedAt DateTime
+  remark      String?
+
+  worker Worker? @relation(fields: [inspectedBy], references: [workerId])
+}
+
+model ActionRecord {
+  actionId    String  @id @default(uuid()) @db.Uuid
+  entityType  String // HarvestBatch, VehicleLoad, ...
+  entityId    String  @db.Uuid
+  actionType  String // CREATE, UPDATE, DELETE, WEIGH, APPROVE, REJECT
+  description String? // Chi tiết nội dung hành động
+  metadata    Json? // Lưu snapshot dữ liệu cũ/mới nếu cần
+
+  performedBy String   @db.Uuid
+  performedAt DateTime @default(now())
+
+  worker Worker @relation(fields: [performedBy], references: [workerId])
+}
+
+// X. TRACEABILITY
+model TraceLink {
+  traceId        String   @id @default(uuid()) @db.Uuid
+  fromEntityType String
+  fromEntityId   String   @db.Uuid
+  toEntityType   String
+  toEntityId     String   @db.Uuid
+  createdAt      DateTime @default(now())
+
+  // Thêm dòng này để database tự chặn trùng lặp cặp From-To
+  @@unique([fromEntityId, toEntityId])
+  @@index([fromEntityType, fromEntityId], name: "idx_trace_from")
+  @@index([toEntityType, toEntityId], name: "idx_trace_to")
+}
+
+//XI. STATE HISTORY
+model StateHistory {
+  historyId  String   @id @default(uuid()) @db.Uuid
+  entityType String // HarvestBatch, VehicleLoad, ...
+  entityId   String   @db.Uuid
+  fromState  String
+  toState    String
+  changedBy  String?  @db.Uuid
+  changedAt  DateTime @default(now())
+  reason     String?
+
+  worker Worker? @relation(fields: [changedBy], references: [workerId])
 }

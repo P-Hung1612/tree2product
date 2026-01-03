@@ -1,0 +1,47 @@
+// src/core/domain/entities/HarvestBatch.ts
+import { Entity } from '../../shared/Entity';
+import { AppError } from '../../shared/AppError';
+
+// Định nghĩa Props (Dữ liệu thô)
+export interface HarvestBatchProps {
+    latexType: string; // Tốt nhất nên là Enum của Domain
+    status: string;
+    workerId?: string | null;
+    shiftId?: string | null;
+    tappingAreaId?: string | null;
+    createdAt: Date;
+    confirmedAt?: Date | null;
+}
+
+export class HarvestBatch extends Entity<HarvestBatchProps> {
+    // Factory method: Cách tạo mới một Batch chuẩn business
+    public static create(props: HarvestBatchProps, id?: string): HarvestBatch {
+        // Validate logic nghiệp vụ ngay khi tạo
+        if (!props.latexType) {
+            throw new AppError('Latex Type is required', 400);
+        }
+
+        // Set default status nếu chưa có
+        const status = props.status || 'CREATED';
+
+        return new HarvestBatch({ ...props, status }, id);
+    }
+
+    // Getters
+    get status() { return this.props.status; }
+    get latexType() { return this.props.latexType; }
+    get workerId() { return this.props.workerId; }
+    get shiftId() { return this.props.shiftId; }
+    get tappingAreaId() { return this.props.tappingAreaId; }
+    get createdAt() { return this.props.createdAt; }
+    get confirmedAt() { return this.props.confirmedAt; }
+
+    // Business Logic Methods (Domain Service sẽ gọi cái này)
+    public confirm() {
+        if (this.props.status === 'CONFIRMED') {
+            throw new AppError('Batch is already confirmed');
+        }
+        this.props.status = 'CONFIRMED';
+        this.props.confirmedAt = new Date();
+    }
+}
