@@ -20,7 +20,7 @@ export class TraceLinkMapper {
     public static toPersistence(entity: TraceLink): any {
         // Trả về object khớp với Prisma Input
         return {
-            id: entity.id,
+            traceId: entity.id,
             fromEntityType: entity.fromEntityType,
             fromEntityId: entity.fromEntityId,
             toEntityType: entity.toEntityType,

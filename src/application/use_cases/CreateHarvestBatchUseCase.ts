@@ -1,16 +1,14 @@
 import { IHarvestBatchRepository } from "@core/domain/interfaces/IHarvestBatchRepository";
 import { CreateHarvestBatchDTO } from "../dtos/CreateHarvestBatchDTO";
 import { HarvestBatch } from "@core/domain/entities/HarvestBatch"; // Import Domain Entity
-import { AppError } from "@core/shared/AppError";
 
 export class CreateHarvestBatchUseCase {
     constructor(private readonly harvestBatchRepo: IHarvestBatchRepository) { }
     public async execute(request: CreateHarvestBatchDTO): Promise<HarvestBatch> {
-        // Validate input cơ bản
-        if (!['NUOC', 'DONG', 'DAY', 'CHEN'].includes(request.latexType)) {
-            throw new AppError('Invalid latex type provided', 400);
-        }
-
+        // Validate input cơ bản (thủ công - đã chuyển sang dùng Zod ở DTO)
+        // if (!['NUOC', 'DONG', 'DAY', 'CHEN'].includes(request.latexType)) {
+        //     throw new AppError('Invalid latex type provided', 400);
+        // }
         //Tạo domain entity HarvestBatch
         const batch = HarvestBatch.create({
             workerId: request.workerId,

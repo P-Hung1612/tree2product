@@ -41,7 +41,37 @@ export class HarvestBatch extends Entity<HarvestBatchProps> {
         if (this.props.status === 'CONFIRMED') {
             throw new AppError('Batch is already confirmed');
         }
+
+        if (this.props.status !== 'WEIGHED') {
+            throw new AppError(
+                `Chỉ có thể xác nhận lô hàng đã được cân. Trạng thái hiện tại: ${this.props.status}`,
+                400);
+        }
+        
         this.props.status = 'CONFIRMED';
         this.props.confirmedAt = new Date();
     }
+
+    //Kiểm tra trạng thái có thể cân hay không
+    public canBeWeighed(): boolean {
+        const allowedStates = ['CREATED', 'CONFIRMED', 'WEIGHED'];
+        return allowedStates.includes(this.props.status);
+    }
+    
+    //Method chuyển trạng thái
+    public markAsWeighed() {
+        if (!this.canBeWeighed()) {
+            throw new AppError(`Không thể cân lô hàng đang ở trạng thái ${this.props.status}`);
+        }
+        this.props.status = 'WEIGHED';
+    }
+
+    //Method chuyển trạng thái
+    public markAsReadyForTransport() {
+        if (this.props.status !== 'CONFIRMED') {
+            throw new AppError(`Chỉ có thể chuyển lô hàng sang trạng thái SẴN SÀNG VẬN CHUYỂN khi nó đang ở trạng thái CONFIRMED. Trạng thái hiện tại: ${this.props.status}`);
+        }
+        this.props.status = 'READY_FOR_TRANSPORT';
+    }
+
 }
