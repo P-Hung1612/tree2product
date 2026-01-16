@@ -34,6 +34,13 @@ export class VehicleLoad extends Entity<VehicleLoadProps> {
         }
         this.props.status = "IN_TRANSIT";
     }
+    //Update status 'ARRIVED'
+    public unload() {
+        if (this.props.status === "ARRIVED"){
+            throw new AppError ('Already unloaded');
+        }
+        this.props.status = "ARRIVED";
+    }
 
     //Getter cho các thuộc tính
     get vehicleId(): string {
@@ -59,4 +66,5 @@ export class VehicleLoad extends Entity<VehicleLoadProps> {
     get loadedBy(): string {
         return this.props.loadedBy;
     }
+    
 }   

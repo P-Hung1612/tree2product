@@ -138,9 +138,11 @@ model VehicleLoad {
 
 // V. MATERIAL ENTRY POINTS
 model Tank {
-  tankId   String          @id @default(uuid()) @db.Uuid
-  tankCode String          @unique
-  type     String
+  tankId       String         @id @default(uuid()) @db.Uuid
+  tankCode     String         @unique
+  latexType    String         @default("NUOC")
+  capacity     Float
+  currentLevel Float          @default(0)
   // Thêm dòng này:
   entries  MaterialEntry[]
 }
@@ -164,7 +166,8 @@ model FermentationTank {
 model MaterialEntry {
   entryId    String    @id @default(uuid()) @db.Uuid
   receivedAt DateTime?
-  receivedBy String?   @db.Uuid
+  receivedBy String   @db.Uuid
+  netWeight Float
 
   tankId    String? @db.Uuid
   yardId    String? @db.Uuid

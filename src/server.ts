@@ -1,4 +1,3 @@
-// src/server.ts
 import 'dotenv/config'; // Load .env
 import express from 'express';
 // import { v4 as uuidv4 } from 'uuid';
@@ -18,6 +17,13 @@ import { LoadBatchToVehicleController } from '@infrastructure/http/controllers/L
 import { LoadBatchToVehicleUseCase } from '@application/use_cases/LoadBatchToVehicleUseCase';
 import { PrismaTraceLinkRepository } from '@infrastructure/database/prisma/repositories/PrismaTraceLinkRepository';
 import { PrismaVehicleLoadRepository } from './infrastructure/database/prisma/repositories/PrismaVehicleLoadRepository';
+import { CreateTankController } from '@infrastructure/http/controllers/TankController';
+import { CreateTankUseCase } from '@application/use_cases/CreateTankUseCase';
+import { PrismaTankRepository } from '@infrastructure/database/prisma/repositories/PrismaTankRepository';
+import { ReceiveLoadController } from '@infrastructure/http/controllers/ReceiveLoadController';
+import { ReceiveLoadToTankUseCase } from '@application/use_cases/ReceiveLoadToTankUseCase';
+import { PrismaMaterialEntryRepository } from '@infrastructure/database/prisma/repositories/PrismaMaterialEntryRepository';
+
 
 //--COMPOSITION ROOT (Nơi khởi tạo và kết nối tất cả các thành phần lại với nhau)
 //1. Infra
@@ -26,18 +32,24 @@ const harvestBatchRepo = new PrismaHarvestBatchRepository(prisma);
 const vehicleRepo = new PrismaVehicleRepository(prisma);
 const traceLinkRepo = new PrismaTraceLinkRepository(prisma);
 const vehicleLoadRepo = new PrismaVehicleLoadRepository(prisma);
+const tankRepo = new PrismaTankRepository(prisma);
+const materialEntryRepo = new PrismaMaterialEntryRepository(prisma);
 //2. Use Cases
 const createBatchUseCase = new CreateHarvestBatchUseCase(harvestBatchRepo);
 const createWeighBatchUseCase = new WeighBatchUseCase(harvestBatchRepo, new PrismaWeighedRecordRepository(prisma));
 const confirmBatchUseCase = new ConfirmBatchUseCase(harvestBatchRepo);
 const createVehicleUseCase = new CreateVehicleUseCase(vehicleRepo);
 const loadBatchToVehicleUseCase = new LoadBatchToVehicleUseCase(vehicleLoadRepo, harvestBatchRepo, traceLinkRepo);
+const createTankUseCase = new CreateTankUseCase(tankRepo);
+const receiveLoadToTankUseCase = new ReceiveLoadToTankUseCase(traceLinkRepo,tankRepo,materialEntryRepo,vehicleLoadRepo);
 //3. Controllers
 const createBatchController = new CreateHarvestBatchController(createBatchUseCase);
 const createWeighBatchController = new CreateWeighBatchController(createWeighBatchUseCase);
 const confirmBatchController = new ConfirmBatchController(confirmBatchUseCase);
 const createVehicleController = new CreateVehicleController(createVehicleUseCase);
 const loadBatchToVehicleController = new LoadBatchToVehicleController(loadBatchToVehicleUseCase);
+const createTankController = new CreateTankController(createTankUseCase);
+const receiveLoadController = new ReceiveLoadController(receiveLoadToTankUseCase);
 //--Express & Setup
 const app = express();
 app.use(express.json()); // Middleware để parse JSON body
@@ -48,6 +60,8 @@ app.post('/api/v1/harvest-batches/:id/weigh', (req, res) => createWeighBatchCont
 app.patch('/api/v1/harvest-batches/:id/confirm', (req, res) => confirmBatchController.execute(req, res));
 app.post('/api/v1/vehicles', (req, res) => createVehicleController.execute(req, res));
 app.post('/api/v1/vehicles/:id/load', (req, res) => loadBatchToVehicleController.execute(req, res));
+app.post('/api/v1/tanks', (req, res) => createTankController.execute(req, res));
+app.post('/api/v1/load/:id/tanks', (req,res) => receiveLoadController.execute(req,res));
 //--START SERVER & DB CONNECTION
 
 async function main() {

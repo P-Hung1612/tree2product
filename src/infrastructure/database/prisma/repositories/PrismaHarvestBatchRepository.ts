@@ -1,4 +1,3 @@
-// src/infrastructure/database/prisma/repositories/PrismaHarvestBatchRepository.ts
 import { PrismaClient } from '@prisma/client';
 import { IHarvestBatchRepository } from '@core/domain/interfaces/IHarvestBatchRepository';
 import { HarvestBatch } from '@core/domain/entities/HarvestBatch';
@@ -10,7 +9,7 @@ export class PrismaHarvestBatchRepository implements IHarvestBatchRepository {
   async save(batch: HarvestBatch): Promise<void> {
     const data = HarvestBatchMapper.toPersistence(batch);
 
-    // Upsert: Nếu có ID thì update, chưa có thì create
+    // Upsert: Có ID -> update, chưa -> create
     await this.prisma.harvestBatch.upsert({
       where: { batchId: batch.id },
       update: data,

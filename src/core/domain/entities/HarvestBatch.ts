@@ -1,4 +1,3 @@
-// src/core/domain/entities/HarvestBatch.ts
 import { Entity } from '../../shared/Entity';
 import { AppError } from '../../shared/AppError';
 
