@@ -10,7 +10,7 @@ export interface TankProps {
 }
 
 export class Tank extends Entity<TankProps> {
-    //Factory method: Cách tạo mới một Vehicle chuẩn business
+    //Tạo Tank theo chuẩn
     public static create(props: TankProps, id?: string): Tank {
         //Validate logic nghiệp vụ ngay khi tạo
         if (props.capacity < 0) {

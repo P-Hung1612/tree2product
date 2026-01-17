@@ -20,9 +20,14 @@ import { PrismaVehicleLoadRepository } from './infrastructure/database/prisma/re
 import { CreateTankController } from '@infrastructure/http/controllers/TankController';
 import { CreateTankUseCase } from '@application/use_cases/CreateTankUseCase';
 import { PrismaTankRepository } from '@infrastructure/database/prisma/repositories/PrismaTankRepository';
-import { ReceiveLoadController } from '@infrastructure/http/controllers/ReceiveLoadController';
+import { ReceiveLoadToTankController } from '@infrastructure/http/controllers/ReceiveLoadToTankController';
+import { ReceiveLoadToYardController } from '@infrastructure/http/controllers/ReceiveLoadToYardController';
 import { ReceiveLoadToTankUseCase } from '@application/use_cases/ReceiveLoadToTankUseCase';
 import { PrismaMaterialEntryRepository } from '@infrastructure/database/prisma/repositories/PrismaMaterialEntryRepository';
+import { PrismaYardRepository } from '@infrastructure/database/prisma/repositories/PrismaYardRepository';
+import { CreateYardUseCase } from '@application/use_cases/CreateYardUseCase';
+import { CreateYardController } from '@infrastructure/http/controllers/YardController';
+import { ReceiveLoadToYardUseCase } from '@application/use_cases/ReceiveLoadToYardUseCase';
 
 
 //--COMPOSITION ROOT (Nơi khởi tạo và kết nối tất cả các thành phần lại với nhau)
@@ -34,6 +39,7 @@ const traceLinkRepo = new PrismaTraceLinkRepository(prisma);
 const vehicleLoadRepo = new PrismaVehicleLoadRepository(prisma);
 const tankRepo = new PrismaTankRepository(prisma);
 const materialEntryRepo = new PrismaMaterialEntryRepository(prisma);
+const yardRepo = new PrismaYardRepository(prisma);
 //2. Use Cases
 const createBatchUseCase = new CreateHarvestBatchUseCase(harvestBatchRepo);
 const createWeighBatchUseCase = new WeighBatchUseCase(harvestBatchRepo, new PrismaWeighedRecordRepository(prisma));
@@ -41,7 +47,9 @@ const confirmBatchUseCase = new ConfirmBatchUseCase(harvestBatchRepo);
 const createVehicleUseCase = new CreateVehicleUseCase(vehicleRepo);
 const loadBatchToVehicleUseCase = new LoadBatchToVehicleUseCase(vehicleLoadRepo, harvestBatchRepo, traceLinkRepo);
 const createTankUseCase = new CreateTankUseCase(tankRepo);
-const receiveLoadToTankUseCase = new ReceiveLoadToTankUseCase(traceLinkRepo,tankRepo,materialEntryRepo,vehicleLoadRepo);
+const receiveLoadToTankUseCase = new ReceiveLoadToTankUseCase(traceLinkRepo, tankRepo, materialEntryRepo, vehicleLoadRepo);
+const createYardUseCase = new CreateYardUseCase(yardRepo);
+const receiveLoadToYardUseCase = new ReceiveLoadToYardUseCase(traceLinkRepo, yardRepo, materialEntryRepo, vehicleLoadRepo);
 //3. Controllers
 const createBatchController = new CreateHarvestBatchController(createBatchUseCase);
 const createWeighBatchController = new CreateWeighBatchController(createWeighBatchUseCase);
@@ -49,7 +57,9 @@ const confirmBatchController = new ConfirmBatchController(confirmBatchUseCase);
 const createVehicleController = new CreateVehicleController(createVehicleUseCase);
 const loadBatchToVehicleController = new LoadBatchToVehicleController(loadBatchToVehicleUseCase);
 const createTankController = new CreateTankController(createTankUseCase);
-const receiveLoadController = new ReceiveLoadController(receiveLoadToTankUseCase);
+const receiveLoadToTankController = new ReceiveLoadToTankController(receiveLoadToTankUseCase);
+const createYardController = new CreateYardController(createYardUseCase);
+const receiveLoadToYardController = new ReceiveLoadToYardController(receiveLoadToYardUseCase);
 //--Express & Setup
 const app = express();
 app.use(express.json()); // Middleware để parse JSON body
@@ -61,7 +71,9 @@ app.patch('/api/v1/harvest-batches/:id/confirm', (req, res) => confirmBatchContr
 app.post('/api/v1/vehicles', (req, res) => createVehicleController.execute(req, res));
 app.post('/api/v1/vehicles/:id/load', (req, res) => loadBatchToVehicleController.execute(req, res));
 app.post('/api/v1/tanks', (req, res) => createTankController.execute(req, res));
-app.post('/api/v1/load/:id/tanks', (req,res) => receiveLoadController.execute(req,res));
+app.post('/api/v1/load/:id/tanks', (req, res) => receiveLoadToTankController.execute(req, res));
+app.post('/api/v1/yards', (req, res) => createYardController.execute(req, res));
+app.post('/api/v1/load/:id/yards', (req, res) => receiveLoadToYardController.execute(req, res));
 //--START SERVER & DB CONNECTION
 
 async function main() {

@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
 import { BaseController } from "./BaseController";
-import { ReceiveLoadToTankUseCase } from "@application/use_cases/ReceiveLoadToTankUseCase";
-import { ReceiveLoadSchema } from "@application/dtos/ReceiveLoadDTO";
+import { ReceiveLoadToYardUseCase } from "@application/use_cases/ReceiveLoadToYardUseCase";
+import { ReceiveLoadToYardSchema } from "@application/dtos/ReceiveLoadToYardDTO";
 
-export class ReceiveLoadController extends BaseController {
-    constructor(private useCase: ReceiveLoadToTankUseCase) {
+export class ReceiveLoadToYardController extends BaseController {
+    constructor(private useCase: ReceiveLoadToYardUseCase) {
         super();
     }
 
@@ -12,12 +12,12 @@ export class ReceiveLoadController extends BaseController {
         try {
             // 1. Gộp dữ liệu
             const payload = {
-                tankId: req.params['id'], // Lấy ID bồn từ URL
+                yardId: req.params['id'], // Lấy ID yard từ URL
                 ...req.body
             };
 
             // 2. Validate
-            const result = ReceiveLoadSchema.safeParse(payload);
+            const result = ReceiveLoadToYardSchema.safeParse(payload);
             if (!result.success) {
                 return this.validationError(res, result.error);
             }
@@ -26,15 +26,15 @@ export class ReceiveLoadController extends BaseController {
             // Giả lập workerId nếu chưa có Auth (Sau này lấy từ req.user.id)
             const dto = {
                 ...result.data,
-                workerId: result.data.workerId || '00000000-0000-0000-0000-000000000000' 
+                workerId: result.data.workerId || '00000000-0000-0000-0000-000000000000'
             };
 
             const entry = await this.useCase.execute(dto);
 
             // 4. Trả về
-            return this.ok(res, { 
+            return this.ok(res, {
                 message: "Nhập kho thành công",
-                entryId: entry.id 
+                entryId: entry.id
             });
 
         } catch (error: any) {

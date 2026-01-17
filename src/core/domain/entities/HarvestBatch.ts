@@ -46,7 +46,7 @@ export class HarvestBatch extends Entity<HarvestBatchProps> {
                 `Chỉ có thể xác nhận lô hàng đã được cân. Trạng thái hiện tại: ${this.props.status}`,
                 400);
         }
-        
+
         this.props.status = 'CONFIRMED';
         this.props.confirmedAt = new Date();
     }
@@ -56,7 +56,7 @@ export class HarvestBatch extends Entity<HarvestBatchProps> {
         const allowedStates = ['CREATED', 'CONFIRMED', 'WEIGHED'];
         return allowedStates.includes(this.props.status);
     }
-    
+
     //Method chuyển trạng thái
     public markAsWeighed() {
         if (!this.canBeWeighed()) {
@@ -66,11 +66,10 @@ export class HarvestBatch extends Entity<HarvestBatchProps> {
     }
 
     //Method chuyển trạng thái
-    public markAsReadyForTransport() {
+    public markAsConsumed() {
         if (this.props.status !== 'CONFIRMED') {
-            throw new AppError(`Chỉ có thể chuyển lô hàng sang trạng thái SẴN SÀNG VẬN CHUYỂN khi nó đang ở trạng thái CONFIRMED. Trạng thái hiện tại: ${this.props.status}`);
+            throw new AppError(`Chỉ có thể chuyển lô hàng khi nó đang ở trạng thái CONFIRMED. Trạng thái hiện tại: ${this.props.status}`);
         }
-        this.props.status = 'READY_FOR_TRANSPORT';
+        this.props.status = 'CONSUMED';
     }
-
 }

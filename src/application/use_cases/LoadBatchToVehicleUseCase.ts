@@ -39,7 +39,7 @@ export class LoadBatchToVehicleUseCase {
             createdAt: new Date(),
         });
         // 4. Update trạng thái Batch
-        batch.markAsReadyForTransport();
+        batch.markAsConsumed();
 
         // 5. Lưu tất cả (Persistence)
         // Lưu ý: Ở đây ta đang gọi save rời rạc. 

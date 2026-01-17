@@ -1,10 +1,10 @@
 import z from "zod";
 
-export const ReceiveLoadSchema = z.object({
+export const ReceiveLoadToTankSchema = z.object({
     loadId: z.string(),
     tankId: z.string(),
     weight: z.number().positive(),
     workerId: z.string()
 })
 
-export type ReceiveLoadDTO = z.infer<typeof ReceiveLoadSchema>;
+export type ReceiveLoadToTankDTO = z.infer<typeof ReceiveLoadToTankSchema>;

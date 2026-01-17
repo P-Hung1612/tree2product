@@ -11,7 +11,7 @@ export class MaterialEntryMapper {
                 netWeight: raw.netWeight,
                 tankId: raw.tankId ?? "",
                 yardId: raw.yardId ?? "",
-                fermentId: raw.fermentId ?? ""
+
             },
             raw.entryId
         )
@@ -25,7 +25,7 @@ export class MaterialEntryMapper {
             netWeight: entity.netWeight,
             tankId: entity.tankId,
             yardId: entity.yardId,
-            fermentId: entity.fermentId
+
         }
     }
 }

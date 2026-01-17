@@ -33,6 +33,7 @@ export class PrismaTankRepository implements ITankRepository {
         });
         return count > 0;
     }
+    
     async findByTankId(tankId: string): Promise<Tank | null> {
         const raw = await this.prisma.tank.findUnique({
             where: { tankId: tankId }

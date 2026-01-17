@@ -19,7 +19,6 @@ enum BatchStatus {
   CREATED
   WEIGHED
   CONFIRMED
-  READY_FOR_TRANSPORT
   CONSUMED
 }
 
@@ -148,17 +147,10 @@ model Tank {
 }
 
 model Yard {
-  yardId   String          @id @default(uuid()) @db.Uuid
-  yardCode String          @unique
-  location String?
-  // Thêm dòng này:
-  entries  MaterialEntry[]
-}
-
-model FermentationTank {
-  tankId   String          @id @default(uuid()) @db.Uuid
-  tankCode String          @unique
-  capacity Decimal?        @db.Decimal(10, 2)
+  yardId    String          @id @default(uuid()) @db.Uuid
+  yardCode  String          @unique
+  location  String?
+  latexType String          
   // Thêm dòng này:
   entries  MaterialEntry[]
 }
@@ -171,12 +163,10 @@ model MaterialEntry {
 
   tankId    String? @db.Uuid
   yardId    String? @db.Uuid
-  fermentId String? @db.Uuid
 
   // Các trường quan hệ giữ nguyên
   tank    Tank?             @relation(fields: [tankId], references: [tankId])
   yard    Yard?             @relation(fields: [yardId], references: [yardId])
-  ferment FermentationTank? @relation(fields: [fermentId], references: [tankId])
 
   worker Worker? @relation(fields: [receivedBy], references: [workerId])
 }
