@@ -12,7 +12,7 @@ export class ReceiveLoadToTankController extends BaseController {
         try {
             // 1. Gộp dữ liệu
             const payload = {
-                tankId: req.params['id'], // Lấy ID bồn từ URL
+                loadId: req.params['id'], // Lấy ID bồn từ URL
                 ...req.body
             };
 

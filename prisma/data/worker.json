@@ -1,0 +1,27 @@
+[
+    {
+        "name": "Nguyen Van A",
+        "employeeCode": "CNC-001",
+        "role": "CONG_NHAN_CAO"
+    },
+    {
+        "name": "Nguyen Van B",
+        "employeeCode": "CNC-002",
+        "role": "CONG_NHAN_CAO"
+    },
+    {
+        "name": "Nguyen Van C",
+        "employeeCode": "CNC-003",
+        "role": "CONG_NHAN_CAO"
+    },
+    {
+        "name": "Tran Thi D",
+        "employeeCode": "CNNL-001",
+        "role": "CONG_NHAN_NHAP_LIEU"
+    },
+    {
+        "name": "Le Thi E",
+        "employeeCode": "CNNL-002",
+        "role": "CONG_NHAN_NHAP_LIEU"
+    }
+]

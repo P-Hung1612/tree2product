@@ -62,6 +62,13 @@ enum ProcessStepStatus {
   APPROVED
 }
 
+enum TankStatus {
+  AVAILABLE
+  FERMENTING
+  PROCESSING
+  MAINTENANCE
+}
+
 // II. CORE MASTER DATA
 model Worker {
   workerId     String @id @default(uuid()) @db.Uuid
@@ -76,12 +83,13 @@ model Worker {
   qcRecords       QcRecord[]
   actionRecords   ActionRecord[]
   stateHistory    StateHistory[]
+  chemicalEntries ChemicalEntry[]
 }
 
 model Shift {
   shiftId   String         @id @default(uuid()) @db.Uuid
-  workDate  DateTime       @db.Date
-  shiftCode String
+  workDate  DateTime       @default(now()) @db.Date
+  shiftCode String         @unique
   batches   HarvestBatch[]
 }
 
@@ -137,38 +145,53 @@ model VehicleLoad {
 
 // V. MATERIAL ENTRY POINTS
 model Tank {
-  tankId       String         @id @default(uuid()) @db.Uuid
-  tankCode     String         @unique
-  latexType    String         @default("NUOC")
-  capacity     Float
-  currentLevel Float          @default(0)
+  tankId         String          @id @default(uuid()) @db.Uuid
+  tankCode       String          @unique
+  latexType      String          @default("NUOC")
+  capacity       Float
+  currentLevel   Float           @default(0)
+  status         TankStatus      @default(AVAILABLE)
+  currentBatchId String?         @unique
   // Thêm dòng này:
-  entries  MaterialEntry[]
+  entries        MaterialEntry[]
+  chemicals      ChemicalEntry[]
 }
 
 model Yard {
   yardId    String          @id @default(uuid()) @db.Uuid
   yardCode  String          @unique
   location  String?
-  latexType String          
+  latexType String
   // Thêm dòng này:
-  entries  MaterialEntry[]
+  entries   MaterialEntry[]
 }
 
 model MaterialEntry {
   entryId    String    @id @default(uuid()) @db.Uuid
   receivedAt DateTime?
-  receivedBy String   @db.Uuid
-  netWeight Float
+  receivedBy String    @db.Uuid
+  netWeight  Float
 
-  tankId    String? @db.Uuid
-  yardId    String? @db.Uuid
+  tankId String? @db.Uuid
+  yardId String? @db.Uuid
 
   // Các trường quan hệ giữ nguyên
-  tank    Tank?             @relation(fields: [tankId], references: [tankId])
-  yard    Yard?             @relation(fields: [yardId], references: [yardId])
+  tank Tank? @relation(fields: [tankId], references: [tankId])
+  yard Yard? @relation(fields: [yardId], references: [yardId])
 
   worker Worker? @relation(fields: [receivedBy], references: [workerId])
+}
+
+model ChemicalEntry {
+  chemId   String   @id @default(uuid()) @db.Uuid
+  tankId   String   @db.Uuid
+  chemName String
+  amount   Float
+  addedBy  String   @db.Uuid
+  addedAt  DateTime @default(now())
+
+  tank   Tank   @relation(fields: [tankId], references: [tankId])
+  worker Worker @relation(fields: [addedBy], references: [workerId])
 }
 
 // VI. PRODUCTION FLOW

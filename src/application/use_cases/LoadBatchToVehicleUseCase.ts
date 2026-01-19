@@ -27,7 +27,7 @@ export class LoadBatchToVehicleUseCase {
             latexType: batch.latexType,
             status: 'CREATED',
             loadedAt: new Date(),
-            loadedBy: 'b8fd4405-8dbb-4506-b2a5-a9cfdb28c61c'//TODO: lấy từ token user đăng nhập
+            loadedBy: '795fcdea-36ca-4de9-8ff4-c957ce466565'//TODO: lấy từ token user đăng nhập
         });
 
         //tạo trace link

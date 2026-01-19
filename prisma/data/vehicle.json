@@ -1,0 +1,5 @@
+[
+    {"plateNumber": "51C-12345",  "capacity": 100},
+    {"plateNumber": "60A-67890", "capacity": 500},
+    {"plateNumber": "70B-54321",  "capacity": 250}
+]

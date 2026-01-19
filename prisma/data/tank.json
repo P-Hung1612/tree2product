@@ -1,0 +1,32 @@
+[
+    {
+        "tankCode": "TANK001",
+        "latexType": "NUOC",
+        "capacity": 10000,
+        "currentLevel": 0
+    },
+    {
+        "tankCode": "TANK002",
+        "latexType": "NUOC",
+        "capacity": 15000,
+        "currentLevel": 0
+    },
+    {
+        "tankCode": "TANK003",
+        "latexType": "NUOC",
+        "capacity": 20000,
+        "currentLevel": 0
+    },
+    {
+        "tankCode": "TANK004",
+        "latexType": "NUOC",
+        "capacity": 12000,
+        "currentLevel": 0
+    },
+    {
+        "tankCode": "TANK005",
+        "latexType": "NUOC",
+        "capacity": 18000,
+        "currentLevel": 0
+    }
+]

@@ -1,109 +1,83 @@
-import { PrismaClient, LatexType, BatchStatus } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+import workers from "./data/worker.json";
+import shifts from "./data/shift.json";
+import vehicles from "./data/vehicle.json";
+import tanks from "./data/tank.json";
+import yards from "./data/yard.json";
 
 const prisma = new PrismaClient();
 
 async function main() {
     console.log('🚀 Đang bắt đầu quá trình Seed dữ liệu...');
+    // Xoá dữ liệu cũ
+    // await prisma.worker.deleteMany({});
+    // await prisma.shift.deleteMany({});
+    // await prisma.vehicle.deleteMany({});
+    // await prisma.tank.deleteMany({});
+    // await prisma.yard.deleteMany({});
 
-    // --- 1. SEED WORKER (Dùng upsert để tránh trùng lặp employeeCode) ---
-    const worker = await prisma.worker.upsert({
-        where: { employeeCode: 'NV_CAO_001' },
-        update: {},
-        create: {
-            name: 'Nguyễn Văn A',
-            employeeCode: 'NV_CAO_001',
-            role: 'Công nhân khai thác',
-        },
-    });
+    // Tạo dữ liệu mẫu
+    // Worker mẫu
+    for (const worker of workers) {
+        await prisma.worker.upsert({
+            where: { employeeCode: worker.employeeCode },
+            update: {},
+            create: {
+                employeeCode: worker.employeeCode,
+                name: worker.name,
+                role: worker.role,
+            },
+        });
+    }
+    //Shift mẫu
+    for (const shift of shifts) {
+        await prisma.shift.upsert({
+            where: { shiftCode: shift.shiftCode },
+            update: {},
+            create: {
+                shiftCode: shift.shiftCode,
+                workDate: new Date(),//tạm thời chưa có logic workDate và shiftCode chưa có nghiệp vụ rõ ràng
+            },
+        });
+    }
+    //Xe mẫu
+    for (const vehicle of vehicles) {
+        await prisma.vehicle.upsert({
+            where: { plateNumber: vehicle.plateNumber },
+            update: {},
+            create: {
+                plateNumber: vehicle.plateNumber,
+                capacity: vehicle.capacity,
+            },
+        });
+    }
+    //Hồ mẫu
+    for (const tank of tanks) {
+        await prisma.tank.upsert({
+            where: { tankCode: tank.tankCode },
+            update: {},
+            create: {
+                tankCode: tank.tankCode,
+                latexType: tank.latexType,
+                capacity: tank.capacity,
+                currentLevel: tank.currentLevel
+            },
+        });
+    }
+    //Sân mẫu
+    for (const yard of yards) {
+        await prisma.yard.upsert({
+            where: { yardCode: yard.yardCode },
+            update: {},
+            create: {
+                yardCode: yard.yardCode,
+                location: yard.location,
+                latexType: yard.latexType,
+            },
+        });
+    }
 
-    console.log('✅ Đã tạo Worker mẫu');
-
-    // --- 2. SEED SHIFT ---
-    const shift_sang = await prisma.shift.create({
-        data: {
-            workDate: new Date(),
-            shiftCode: 'CA_SANG_01',
-        },
-    });
-    console.log('✅ Đã tạo Shift mẫu');
-
-    // --- 3. SEED HARVEST BATCH (Kết nối với Worker và Shift vừa tạo) ---
-    const harvestBatch = await prisma.harvestBatch.create({
-        data: {
-            workerId: worker.workerId,
-            shiftId: shift_sang.shiftId,
-            latexType: LatexType.NUOC,
-            tappingAreaId: null, // Có thể bổ sung UUID nếu có bảng Area
-            status: BatchStatus.CREATED,
-        },
-    });
-    
-    console.log('✅ Đã tạo HarvestBatch mẫu');
-
-    // --- 4. SEED VEHICLE ---
-    const vehicle = await prisma.vehicle.upsert({
-        where: { plateNumber: '93H1-12345' },
-        update: {},
-        create: {
-            plateNumber: '93H1-12345',
-            capacity: 5000.0, // 5 tấn
-        },
-    });
-    console.log('✅ Đã tạo Vehicle mẫu');
-
-    // --- 5. SEED EQUIPMENT (Tank, Yard, Furnace) ---
-
-    // Fermentation Tank (Bể đánh đông)
-    const fermentationTank = await prisma.fermentationTank.upsert({
-        where: { tankCode: 'BE_DONG_A1' },
-        update: {},
-        create: {
-            tankCode: 'BE_DONG_A1',
-            capacity: 1000.0,
-        },
-    });
-
-    // Tank (Hồ chứa phụ/Hồ sơ chế)
-    const tank = await prisma.tank.upsert({
-        where: { tankCode: 'HO_PHU_01' },
-        update: {},
-        create: {
-            tankCode: 'HO_PHU_01',
-            type: 'PHU',
-        },
-    });
-
-    // Yard (Sân phơi)
-    const yard = await prisma.yard.upsert({
-        where: { yardCode: 'SAN_PHOI_01' },
-        update: {},
-        create: {
-            yardCode: 'SAN_PHOI_01',
-            location: 'Khu vực xưởng 1',
-        },
-    });
-
-    // Furnace (Lò sấy)
-    const furnace = await prisma.furnace.create({
-        data: {
-            furnaceCode: 'LO_SAY_01',
-        },
-    });
-    console.log('✅ Đã tạo Equipment mẫu (Tank/Yard/Furnace)');
-
-    console.log('\n✨ Chúc mừng! Dữ liệu mẫu đã sẵn sàng trong Database.');
-
-
-    console.log('✅ Đã tạo dữ liệu mẫu thành công:');
-    console.table({
-        Worker: worker.name,
-        BatchID: harvestBatch.batchId,
-        Vehicle: vehicle.plateNumber,
-        Tank: tank.tankCode,
-        Yard: yard.yardCode,
-        Furnace: furnace.furnaceCode,
-        FermentationTank: fermentationTank.tankCode,
-    });
+    console.log('✅ Đã tạo dữ liệu mẫu thành công!');
 }
 
 main()

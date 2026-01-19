@@ -12,7 +12,7 @@ export class ReceiveLoadToYardController extends BaseController {
         try {
             // 1. Gộp dữ liệu
             const payload = {
-                yardId: req.params['id'], // Lấy ID yard từ URL
+                loadId: req.params['id'], // Lấy ID yard từ URL
                 ...req.body
             };
 

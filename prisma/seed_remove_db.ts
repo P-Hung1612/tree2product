@@ -15,9 +15,10 @@ async function main() {
     // console.log('✅ Đã loại bỏ Shift', removedShift);
     const removedHarvestBatch = await prisma.harvestBatch.deleteMany({
         where: {
-            workerId: '6af5650e-9fc7-46b9-bd96-d57a042e962f',
-            shiftId: '1d91fd19-cf28-4e79-ab1e-47b734e7a6bb',
-            latexType: 'NUOC',
+            workerId: null,
+            shiftId: null,
+            latexType: 'CHEN',
+            batchId:'73d752fb-3d77-4bf0-a3f8-e989401825bc'
         },
     });
     console.log('✅ Đã loại bỏ HarvestBatch', removedHarvestBatch);

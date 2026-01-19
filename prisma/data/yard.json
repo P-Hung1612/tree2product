@@ -1,0 +1,17 @@
+[
+    {
+        "yardCode": "YARD001",
+        "location": "Hồ Chí Minh",
+        "latexType": "TAP"
+    },
+    {
+        "yardCode": "YARD002",
+        "location": "Bình Dương",
+        "latexType": "TAP"
+    },
+    {
+        "yardCode": "YARD003",
+        "location": "Đồng Nai",
+        "latexType": "TAP"
+    }
+]
