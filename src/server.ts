@@ -28,6 +28,10 @@ import { PrismaYardRepository } from '@infrastructure/database/prisma/repositori
 import { CreateYardUseCase } from '@application/use_cases/CreateYardUseCase';
 import { CreateYardController } from '@infrastructure/http/controllers/YardController';
 import { ReceiveLoadToYardUseCase } from '@application/use_cases/ReceiveLoadToYardUseCase';
+import { PrismaProcessDefinitionRepository } from '@infrastructure/database/prisma/repositories/PrismaProcessDefinitionRepository';
+import { AssignProductionToTankUseCase } from '@application/use_cases/AssignProductionToTankUseCase';
+import { PrismaProcessInstanceRepository } from '@infrastructure/database/prisma/repositories/PrismaProcessInstanceRepository';
+import { AssignProductionToTankController } from '@infrastructure/http/controllers/AssignProductionToTank';
 
 
 //--COMPOSITION ROOT (Nơi khởi tạo và kết nối tất cả các thành phần lại với nhau)
@@ -40,6 +44,8 @@ const vehicleLoadRepo = new PrismaVehicleLoadRepository(prisma);
 const tankRepo = new PrismaTankRepository(prisma);
 const materialEntryRepo = new PrismaMaterialEntryRepository(prisma);
 const yardRepo = new PrismaYardRepository(prisma);
+const processDefRepo = new PrismaProcessDefinitionRepository(prisma);
+const processInsRepo = new PrismaProcessInstanceRepository(prisma);
 //2. Use Cases
 const createBatchUseCase = new CreateHarvestBatchUseCase(harvestBatchRepo);
 const createWeighBatchUseCase = new WeighBatchUseCase(harvestBatchRepo, new PrismaWeighedRecordRepository(prisma));
@@ -50,6 +56,7 @@ const createTankUseCase = new CreateTankUseCase(tankRepo);
 const receiveLoadToTankUseCase = new ReceiveLoadToTankUseCase(traceLinkRepo, tankRepo, materialEntryRepo, vehicleLoadRepo);
 const createYardUseCase = new CreateYardUseCase(yardRepo);
 const receiveLoadToYardUseCase = new ReceiveLoadToYardUseCase(traceLinkRepo, yardRepo, materialEntryRepo, vehicleLoadRepo);
+const assignProductionToTankUseCase = new AssignProductionToTankUseCase(tankRepo, processDefRepo, processInsRepo);
 //3. Controllers
 const createBatchController = new CreateHarvestBatchController(createBatchUseCase);
 const createWeighBatchController = new CreateWeighBatchController(createWeighBatchUseCase);
@@ -60,6 +67,7 @@ const createTankController = new CreateTankController(createTankUseCase);
 const receiveLoadToTankController = new ReceiveLoadToTankController(receiveLoadToTankUseCase);
 const createYardController = new CreateYardController(createYardUseCase);
 const receiveLoadToYardController = new ReceiveLoadToYardController(receiveLoadToYardUseCase);
+const assignProductionToTankController = new AssignProductionToTankController(assignProductionToTankUseCase);
 //--Express & Setup
 const app = express();
 app.use(express.json()); // Middleware để parse JSON body
@@ -74,6 +82,7 @@ app.post('/api/v1/tanks', (req, res) => createTankController.execute(req, res));
 app.post('/api/v1/load/:id/tanks', (req, res) => receiveLoadToTankController.execute(req, res));
 app.post('/api/v1/yards', (req, res) => createYardController.execute(req, res));
 app.post('/api/v1/load/:id/yards', (req, res) => receiveLoadToYardController.execute(req, res));
+app.post('/api/v1/tanks/:id/assign-production', (req, res) => {assignProductionToTankController.execute(req, res);});
 //--START SERVER & DB CONNECTION
 
 async function main() {

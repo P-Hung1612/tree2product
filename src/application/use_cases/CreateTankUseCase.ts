@@ -19,7 +19,8 @@ export class CreateTankUseCase {
             tankCode: request.tankCode,
             capacity: request.capacity,
             latexType: request.latexType,
-            currentLevel: request.currentLevel
+            currentLevel: request.currentLevel,
+            status: request.status,
         });
         await this.tankRepo.save(newTank);
         return newTank;

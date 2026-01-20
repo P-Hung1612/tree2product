@@ -64,9 +64,15 @@ enum ProcessStepStatus {
 
 enum TankStatus {
   AVAILABLE
+  PLANNED
   FERMENTING
-  PROCESSING
   MAINTENANCE
+}
+
+enum ProcessStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
 }
 
 // II. CORE MASTER DATA
@@ -145,16 +151,18 @@ model VehicleLoad {
 
 // V. MATERIAL ENTRY POINTS
 model Tank {
-  tankId         String          @id @default(uuid()) @db.Uuid
-  tankCode       String          @unique
-  latexType      String          @default("NUOC")
-  capacity       Float
-  currentLevel   Float           @default(0)
-  status         TankStatus      @default(AVAILABLE)
-  currentBatchId String?         @unique
-  // Thêm dòng này:
-  entries        MaterialEntry[]
-  chemicals      ChemicalEntry[]
+  tankId       String     @id @default(uuid()) @db.Uuid
+  tankCode     String     @unique
+  latexType    String     @default("NUOC")
+  capacity     Float
+  currentLevel Float      @default(0)
+  status       TankStatus @default(AVAILABLE)
+
+  currentProcessId String?          @unique @db.Uuid
+  currentProcess   ProcessInstance? @relation(fields: [currentProcessId], references: [processInstanceId])
+
+  entries   MaterialEntry[]
+  chemicals ChemicalEntry[]
 }
 
 model Yard {
@@ -302,14 +310,15 @@ model ProcessStepDefinition {
 }
 
 model ProcessInstance {
-  processInstanceId String    @id @default(uuid()) @db.Uuid
-  processId         String?   @db.Uuid
-  startedAt         DateTime?
+  processInstanceId String        @id @default(uuid()) @db.Uuid
+  processId         String       @db.Uuid
+  startedAt         DateTime
   endedAt           DateTime?
-  status            String?
+  status            ProcessStatus @default(PLANNED)
 
   process ProcessDefinition?    @relation(fields: [processId], references: [processId])
   steps   ProcessStepInstance[]
+  tank    Tank?
 }
 
 model ProcessStepInstance {

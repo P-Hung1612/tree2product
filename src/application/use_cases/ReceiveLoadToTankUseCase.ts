@@ -31,6 +31,10 @@ export class ReceiveLoadToTankUseCase {
         if (load.status === "ARRIVED") {
             throw new AppError('This load has already unloaded!', 400);
         }
+        //Kiểm tra tình trạng tank
+        if (tank.status === "PROCESSING" || tank.status === "MAINTAINING") {
+            throw new AppError('Tank not ready to receive load', 400);
+        }
         //Kiểm tra sức chứa
         if (!tank.canReceive(dto.weight)) {
             throw new AppError('Tank overflow', 400);

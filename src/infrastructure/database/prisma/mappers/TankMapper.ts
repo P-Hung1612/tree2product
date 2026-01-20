@@ -9,7 +9,9 @@ export class TankMapper {
                 tankCode: raw.tankCode,
                 latexType: raw.latexType,
                 capacity: raw.capacity,
-                currentLevel: raw.currentLevel
+                currentLevel: raw.currentLevel,
+                status: raw.status,
+                currentProcessId: raw.currentProcessId as string,
             },
             raw.tankId // Map ID của DB vào ID của Entity
         );
@@ -23,7 +25,9 @@ export class TankMapper {
             tankCode: entity.tankCode,
             latexType: entity.latexType as any, // Cần ép kiểu về Prisma Enum
             capacity: entity.capacity,
-            currentLevel: entity.currentLevel
+            currentLevel: entity.currentLevel,
+            status: entity.status,
+            currentProcessId: entity.currentProcessId as string,
         };
     }
 }

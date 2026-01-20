@@ -7,6 +7,9 @@ export interface TankProps {
     latexType: string; //default("NUOC")
     capacity: number;
     currentLevel: number;
+    status: string;
+    currentBatchId?: string;
+    currentProcessId?: string;
 }
 
 export class Tank extends Entity<TankProps> {
@@ -26,10 +29,20 @@ export class Tank extends Entity<TankProps> {
     public receive(weight: number): number {
         return this.props.currentLevel += weight;
     }
-
+    //Assign trạng thái tank
+    public assignProcessInstance(processDefinitionId: string): void {
+        this.props.status = 'PLANNED';
+        this.props.currentProcessId = processDefinitionId;
+    }
+    //Kiểm tra tank có sẵn sàng để sử dụng
+    public isAvailable(): boolean {
+        return this.props.status === 'AVAILABLE';
+    }
     //Getters
     get tankCode() { return this.props.tankCode; }
     get latexType() { return this.props.latexType; }
     get capacity() { return this.props.capacity; }
     get currentLevel() { return this.props.currentLevel; }
+    get status() { return this.props.status; }
+    get currentProcessId() { return this.props.currentProcessId; }
 }

@@ -21,7 +21,7 @@ async function main() {
     }
     // Tạo HarvestBatch mẫu
     const batchData = [];
-    for (let i = 0; i <= 8; i++) {
+    for (let i = 0; i <= 0; i++) {
         const randomWorker = faker.helpers.arrayElement(allWorkers);
         const randomShift = faker.helpers.arrayElement(allShifts);
         const randomLatexType = faker.helpers.arrayElement(latexType);
@@ -38,6 +38,23 @@ async function main() {
         data: batchData,
         skipDuplicates: true,
     });
+
+    //Định nghĩa quy trình
+    const svr3lDef = await prisma.processDefinition.create({
+        data: {
+            productType: "LY_TAM",
+            name: "Quy trình ly tâm",
+            isActive: true,
+            steps: {
+                create: [//quy trình giả sử
+                    { stepOrder: 1, entityType: "Tank", requiresApproval: true },
+                    { stepOrder: 2, entityType: "SheetRolling", requiresApproval: false },
+                    { stepOrder: 3, entityType: "Furnace", requiresApproval: true }
+                ]
+            }
+        }
+    });
+    console.log('✅ Đã tạo thêm ProcessDefinition bổ sung:', svr3lDef);
 
     console.log('✅ Quá trình Seed bổ sung dữ liệu hoàn tất!');
 };
