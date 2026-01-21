@@ -34,10 +34,18 @@ export class Tank extends Entity<TankProps> {
         this.props.status = 'PLANNED';
         this.props.currentProcessId = processDefinitionId;
     }
+    //Status Transition
+    public startFermenting(): void {
+        if(this.props.status !== 'PLANNED') {
+            throw new AppError('Tank must be in PLANNED status to start fermenting', 400);
+        }
+        this.props.status = 'FERMENTING';
+    }
     //Kiểm tra tank có sẵn sàng để sử dụng
     public isAvailable(): boolean {
         return this.props.status === 'AVAILABLE';
     }
+
     //Getters
     get tankCode() { return this.props.tankCode; }
     get latexType() { return this.props.latexType; }

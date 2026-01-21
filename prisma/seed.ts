@@ -15,6 +15,7 @@ async function main() {
     // await prisma.vehicle.deleteMany({});
     // await prisma.tank.deleteMany({});
     // await prisma.yard.deleteMany({});
+    
 
     // Tạo dữ liệu mẫu
     // Worker mẫu

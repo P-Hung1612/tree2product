@@ -1,6 +1,5 @@
 import 'dotenv/config'; // Load .env
 import express from 'express';
-// import { v4 as uuidv4 } from 'uuid';
 import { PrismaClient } from '@prisma/client';
 import { PrismaHarvestBatchRepository } from './infrastructure/database/prisma/repositories/PrismaHarvestBatchRepository';
 import { CreateHarvestBatchUseCase } from '@application/use_cases/CreateHarvestBatchUseCase';
@@ -32,6 +31,12 @@ import { PrismaProcessDefinitionRepository } from '@infrastructure/database/pris
 import { AssignProductionToTankUseCase } from '@application/use_cases/AssignProductionToTankUseCase';
 import { PrismaProcessInstanceRepository } from '@infrastructure/database/prisma/repositories/PrismaProcessInstanceRepository';
 import { AssignProductionToTankController } from '@infrastructure/http/controllers/AssignProductionToTank';
+import { PrismaChemicalRepository } from '@infrastructure/database/prisma/repositories/PrismaChemicalRepository';
+import { CreateChemicalUseCase } from '@application/use_cases/CreateChemicalUseCase';
+import { CreateChemicalController } from '@infrastructure/http/controllers/ChemicalController';
+import { PrismaChemicalEntryRepository } from '@infrastructure/database/prisma/repositories/PrismaChemicalEntryRepository';
+import { AddChemicalToProcessUseCase } from '@application/use_cases/AddChemicalToProcessUseCase';
+import { AddChemicalToProcessController } from '@infrastructure/http/controllers/AddChemicalToProcessController';
 
 
 //--COMPOSITION ROOT (Nơi khởi tạo và kết nối tất cả các thành phần lại với nhau)
@@ -46,6 +51,8 @@ const materialEntryRepo = new PrismaMaterialEntryRepository(prisma);
 const yardRepo = new PrismaYardRepository(prisma);
 const processDefRepo = new PrismaProcessDefinitionRepository(prisma);
 const processInsRepo = new PrismaProcessInstanceRepository(prisma);
+const chemRepo = new PrismaChemicalRepository(prisma);
+const chemicalEntryRepo = new PrismaChemicalEntryRepository(prisma);
 //2. Use Cases
 const createBatchUseCase = new CreateHarvestBatchUseCase(harvestBatchRepo);
 const createWeighBatchUseCase = new WeighBatchUseCase(harvestBatchRepo, new PrismaWeighedRecordRepository(prisma));
@@ -57,6 +64,8 @@ const receiveLoadToTankUseCase = new ReceiveLoadToTankUseCase(traceLinkRepo, tan
 const createYardUseCase = new CreateYardUseCase(yardRepo);
 const receiveLoadToYardUseCase = new ReceiveLoadToYardUseCase(traceLinkRepo, yardRepo, materialEntryRepo, vehicleLoadRepo);
 const assignProductionToTankUseCase = new AssignProductionToTankUseCase(tankRepo, processDefRepo, processInsRepo);
+const createChemicalUseCase = new CreateChemicalUseCase(chemRepo);
+const addChemicalToProcessUseCase = new AddChemicalToProcessUseCase(chemRepo, tankRepo, processInsRepo, chemicalEntryRepo);
 //3. Controllers
 const createBatchController = new CreateHarvestBatchController(createBatchUseCase);
 const createWeighBatchController = new CreateWeighBatchController(createWeighBatchUseCase);
@@ -68,6 +77,8 @@ const receiveLoadToTankController = new ReceiveLoadToTankController(receiveLoadT
 const createYardController = new CreateYardController(createYardUseCase);
 const receiveLoadToYardController = new ReceiveLoadToYardController(receiveLoadToYardUseCase);
 const assignProductionToTankController = new AssignProductionToTankController(assignProductionToTankUseCase);
+const createChemicalController = new CreateChemicalController(createChemicalUseCase);
+const addChemicalToProcessController = new AddChemicalToProcessController(addChemicalToProcessUseCase);
 //--Express & Setup
 const app = express();
 app.use(express.json()); // Middleware để parse JSON body
@@ -83,6 +94,8 @@ app.post('/api/v1/load/:id/tanks', (req, res) => receiveLoadToTankController.exe
 app.post('/api/v1/yards', (req, res) => createYardController.execute(req, res));
 app.post('/api/v1/load/:id/yards', (req, res) => receiveLoadToYardController.execute(req, res));
 app.post('/api/v1/tanks/:id/assign-production', (req, res) => {assignProductionToTankController.execute(req, res);});
+app.post('/api/v1/chemicals', (req, res) => {createChemicalController.execute(req, res);});
+app.post('/api/v1/production/add-chemical', (req, res) => {addChemicalToProcessController.execute(req, res);});
 //--START SERVER & DB CONNECTION
 
 async function main() {

@@ -19,6 +19,13 @@ export class ProcessInstance extends Entity<ProcessInstanceProps> {
         return new ProcessInstance(props, id);
     }
     //methods nghiệp vụ (nếu có)
+    //Status Transition
+    public startProcessing(): void {
+        if(this.props.status !== 'PLANNED') {
+            throw new AppError('ProcessInstance must be in PLANNED status to start processing', 400);
+        }
+        this.props.status = 'IN_PROGRESS';
+    }
 
     //Getters
     get processId() { return this.props.processId; }

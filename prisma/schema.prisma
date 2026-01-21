@@ -2,6 +2,10 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator dbml {
+  provider = "prisma-dbml-generator"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -99,6 +103,16 @@ model Shift {
   batches   HarvestBatch[]
 }
 
+model Chemical {
+  chemicalId   String @id @default(uuid()) @db.Uuid
+  chemCode     String @unique
+  chemName     String
+  unit         String
+  pricePerUnit Float
+
+  entries ChemicalEntry[]
+}
+
 // III. HARVEST & BATCH
 model HarvestBatch {
   batchId       String      @id @default(uuid()) @db.Uuid
@@ -191,15 +205,20 @@ model MaterialEntry {
 }
 
 model ChemicalEntry {
-  chemId   String   @id @default(uuid()) @db.Uuid
-  tankId   String   @db.Uuid
-  chemName String
-  amount   Float
-  addedBy  String   @db.Uuid
-  addedAt  DateTime @default(now())
+  entryId    String   @id @default(uuid()) @db.Uuid
+  chemicalId String   @db.Uuid
+  chemical   Chemical @relation(fields: [chemicalId], references: [chemicalId])
+  amount     Float
 
+  tankId String @db.Uuid
   tank   Tank   @relation(fields: [tankId], references: [tankId])
-  worker Worker @relation(fields: [addedBy], references: [workerId])
+
+  processInstanceId String          @db.Uuid
+  processInstance   ProcessInstance @relation(fields: [processInstanceId], references: [processInstanceId])
+
+  addedBy String   @db.Uuid
+  worker  Worker   @relation(fields: [addedBy], references: [workerId])
+  addedAt DateTime @default(now())
 }
 
 // VI. PRODUCTION FLOW
@@ -311,14 +330,15 @@ model ProcessStepDefinition {
 
 model ProcessInstance {
   processInstanceId String        @id @default(uuid()) @db.Uuid
-  processId         String       @db.Uuid
+  processId         String        @db.Uuid
   startedAt         DateTime
   endedAt           DateTime?
   status            ProcessStatus @default(PLANNED)
 
-  process ProcessDefinition?    @relation(fields: [processId], references: [processId])
-  steps   ProcessStepInstance[]
-  tank    Tank?
+  process         ProcessDefinition?    @relation(fields: [processId], references: [processId])
+  steps           ProcessStepInstance[]
+  tank            Tank?
+  chemicalEntries ChemicalEntry[]
 }
 
 model ProcessStepInstance {

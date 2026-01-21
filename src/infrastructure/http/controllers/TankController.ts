@@ -21,14 +21,14 @@ export class CreateTankController extends BaseController {
       }
 
       // 2. Application Layer (Use Case)
-      // Lúc này validationResult.data đã sạch sẽ và đúng kiểu DTO
+      
       const result = await this.useCase.execute(validationResult.data);
 
       // 3. Response
-      return this.ok(res, { tankId: result.id }); // Chỉ trả về ID hoặc full object tùy nhu cầu
+      return this.ok(res, { tankId: result.id }); // Chỉ trả về ID hoặc full object tùy trường hợp
 
     } catch (err: any) {
-      // Bắt các lỗi AppError ném ra từ Domain (ví dụ: Batch đã tồn tại...)
+      // Bắt các lỗi AppError ném ra từ Domain
       return this.fail(res, err);
     }
   }

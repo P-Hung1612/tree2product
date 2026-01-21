@@ -13,7 +13,7 @@ export interface HarvestBatchProps {
 }
 
 export class HarvestBatch extends Entity<HarvestBatchProps> {
-    // Factory method: Cách tạo mới một Batch chuẩn business
+    // Tạo mới một Batch theo chuẩn 
     public static create(props: HarvestBatchProps, id?: string): HarvestBatch {
         // Validate logic nghiệp vụ ngay khi tạo
         if (!props.latexType) {

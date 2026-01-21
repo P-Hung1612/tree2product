@@ -1,0 +1,421 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table Worker {
+  workerId String [pk]
+  name String [not null]
+  employeeCode String [unique, not null]
+  role String [not null]
+  harvestBatches HarvestBatch [not null]
+  weightRecords WeightRecord [not null]
+  vehicleLoads VehicleLoad [not null]
+  materialEntries MaterialEntry [not null]
+  qcRecords QcRecord [not null]
+  actionRecords ActionRecord [not null]
+  stateHistory StateHistory [not null]
+  chemicalEntries ChemicalEntry [not null]
+}
+
+Table Shift {
+  shiftId String [pk]
+  workDate DateTime [default: `now()`, not null]
+  shiftCode String [unique, not null]
+  batches HarvestBatch [not null]
+}
+
+Table Chemical {
+  chemicalId String [pk]
+  chemCode String [unique, not null]
+  chemName String [not null]
+  unit String [not null]
+  pricePerUnit Float [not null]
+  entries ChemicalEntry [not null]
+}
+
+Table HarvestBatch {
+  batchId String [pk]
+  workerId String
+  shiftId String
+  latexType LatexType [not null]
+  tappingAreaId String
+  status BatchStatus [not null, default: 'CREATED']
+  createdAt DateTime [default: `now()`, not null]
+  confirmedAt DateTime
+  worker Worker
+  shift Shift
+  weightRecords WeightRecord [not null]
+}
+
+Table WeightRecord {
+  weightId String [pk]
+  batchId String
+  netWeight Decimal [not null]
+  weighedBy String
+  weighedAt DateTime [not null]
+  batch HarvestBatch
+  worker Worker
+}
+
+Table Vehicle {
+  vehicleId String [pk]
+  plateNumber String [unique, not null]
+  capacity Decimal
+  loads VehicleLoad [not null]
+}
+
+Table VehicleLoad {
+  loadId String [pk]
+  vehicleId String
+  compartmentCode String [not null]
+  latexType LatexType [not null]
+  status VehicleLoadStatus [not null, default: 'CREATED']
+  loadedAt DateTime
+  loadedBy String
+  vehicle Vehicle
+  worker Worker
+}
+
+Table Tank {
+  tankId String [pk]
+  tankCode String [unique, not null]
+  latexType String [not null, default: 'NUOC']
+  capacity Float [not null]
+  currentLevel Float [not null, default: 0]
+  status TankStatus [not null, default: 'AVAILABLE']
+  currentProcessId String [unique]
+  currentProcess ProcessInstance
+  entries MaterialEntry [not null]
+  chemicals ChemicalEntry [not null]
+}
+
+Table Yard {
+  yardId String [pk]
+  yardCode String [unique, not null]
+  location String
+  latexType String [not null]
+  entries MaterialEntry [not null]
+}
+
+Table MaterialEntry {
+  entryId String [pk]
+  receivedAt DateTime
+  receivedBy String [not null]
+  netWeight Float [not null]
+  tankId String
+  yardId String
+  tank Tank
+  yard Yard
+  worker Worker
+}
+
+Table ChemicalEntry {
+  entryId String [pk]
+  chemicalId String [not null]
+  chemical Chemical [not null]
+  amount Float [not null]
+  tankId String [not null]
+  tank Tank [not null]
+  processInstanceId String [not null]
+  processInstance ProcessInstance [not null]
+  addedBy String [not null]
+  worker Worker [not null]
+  addedAt DateTime [default: `now()`, not null]
+}
+
+Table Channel {
+  channelId String [pk]
+  channelCode String [unique, not null]
+  flows ChannelFlow [not null]
+}
+
+Table ChannelFlow {
+  channelFlowId String [pk]
+  channelId String
+  flowedAt DateTime [not null]
+  channel Channel
+}
+
+Table SheetRolling {
+  rollingId String [pk]
+  rollingDate DateTime [not null]
+  type ProductType [not null]
+}
+
+Table GongStack {
+  gongId String [pk]
+  gongNumber String [not null]
+}
+
+Table Furnace {
+  furnaceId String [pk]
+  furnaceCode String [unique, not null]
+  runs FurnaceRun [not null]
+}
+
+Table FurnaceRun {
+  furnaceRunId String [pk]
+  furnaceId String
+  startedAt DateTime
+  endedAt DateTime
+  furnace Furnace
+}
+
+Table Container {
+  containerId String [pk]
+  containerCode String [unique, not null]
+  fills ContainerFill [not null]
+}
+
+Table ContainerFill {
+  fillId String [pk]
+  containerId String
+  filledAt DateTime [not null]
+  container Container
+}
+
+Table ProductLot {
+  lotId String [pk]
+  productType ProductType [not null]
+  createdAt DateTime [default: `now()`, not null]
+  inventory Inventory [not null]
+}
+
+Table Warehouse {
+  warehouseId String [pk]
+  name String [not null]
+  location String
+  locations WarehouseLocation [not null]
+}
+
+Table WarehouseLocation {
+  locationId String [pk]
+  warehouseId String
+  code String [not null]
+  warehouse Warehouse
+  inventory Inventory [not null]
+}
+
+Table Inventory {
+  inventoryId String [pk]
+  lotId String
+  locationId String
+  storedAt DateTime [not null]
+  status String
+  productLot ProductLot
+  location WarehouseLocation
+}
+
+Table ProcessDefinition {
+  processId String [pk]
+  productType ProductType [not null]
+  name String [not null]
+  isActive Boolean [default: true]
+  steps ProcessStepDefinition [not null]
+  instances ProcessInstance [not null]
+}
+
+Table ProcessStepDefinition {
+  stepId String [pk]
+  processId String
+  stepOrder Int [not null]
+  entityType String [not null]
+  requiresApproval Boolean [default: true]
+  process ProcessDefinition
+  instances ProcessStepInstance [not null]
+}
+
+Table ProcessInstance {
+  processInstanceId String [pk]
+  processId String [not null]
+  startedAt DateTime [not null]
+  endedAt DateTime
+  status ProcessStatus [not null, default: 'PLANNED']
+  process ProcessDefinition
+  steps ProcessStepInstance [not null]
+  tank Tank
+  chemicalEntries ChemicalEntry [not null]
+}
+
+Table ProcessStepInstance {
+  stepInstanceId String [pk]
+  processInstanceId String
+  stepId String
+  entityType String [not null]
+  entityId String [not null]
+  status ProcessStepStatus [not null, default: 'PENDING']
+  startedAt DateTime
+  endedAt DateTime
+  processInstance ProcessInstance
+  stepDefinition ProcessStepDefinition
+}
+
+Table QcRecord {
+  qcId String [pk]
+  entityType String [not null]
+  entityId String [not null]
+  qcType String
+  result QcResult [not null]
+  inspectedBy String
+  inspectedAt DateTime [not null]
+  remark String
+  worker Worker
+}
+
+Table ActionRecord {
+  actionId String [pk]
+  entityType String [not null]
+  entityId String [not null]
+  actionType String [not null]
+  description String
+  metadata Json
+  performedBy String [not null]
+  performedAt DateTime [default: `now()`, not null]
+  worker Worker [not null]
+}
+
+Table TraceLink {
+  traceId String [pk]
+  fromEntityType String [not null]
+  fromEntityId String [not null]
+  toEntityType String [not null]
+  toEntityId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+
+  indexes {
+    (fromEntityId, toEntityId) [unique]
+  }
+}
+
+Table StateHistory {
+  historyId String [pk]
+  entityType String [not null]
+  entityId String [not null]
+  fromState String [not null]
+  toState String [not null]
+  changedBy String
+  changedAt DateTime [default: `now()`, not null]
+  reason String
+  worker Worker
+}
+
+Enum LatexType {
+  NUOC
+  DONG
+  DAY
+  CHEN
+}
+
+Enum BatchStatus {
+  CREATED
+  WEIGHED
+  CONFIRMED
+  CONSUMED
+}
+
+Enum VehicleLoadStatus {
+  CREATED
+  LOADED
+  IN_TRANSIT
+  ARRIVED
+}
+
+Enum QcResult {
+  PASS
+  FAIL
+}
+
+Enum ActionType {
+  CREATE
+  WEIGH
+  CONFIRM
+  APPROVE
+  REJECT
+  LOAD
+  DISPATCH
+  ARRIVE
+  START
+  COMPLETE
+}
+
+Enum ProductType {
+  LY_TAM
+  SVR3L
+  SVRCV
+  RSS
+  SVR10
+}
+
+Enum ProcessStepStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  APPROVED
+}
+
+Enum TankStatus {
+  AVAILABLE
+  PLANNED
+  FERMENTING
+  MAINTENANCE
+}
+
+Enum ProcessStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+}
+
+Ref: HarvestBatch.workerId > Worker.workerId
+
+Ref: HarvestBatch.shiftId > Shift.shiftId
+
+Ref: WeightRecord.batchId > HarvestBatch.batchId
+
+Ref: WeightRecord.weighedBy > Worker.workerId
+
+Ref: VehicleLoad.vehicleId > Vehicle.vehicleId
+
+Ref: VehicleLoad.loadedBy > Worker.workerId
+
+Ref: Tank.currentProcessId - ProcessInstance.processInstanceId
+
+Ref: MaterialEntry.tankId > Tank.tankId
+
+Ref: MaterialEntry.yardId > Yard.yardId
+
+Ref: MaterialEntry.receivedBy > Worker.workerId
+
+Ref: ChemicalEntry.chemicalId > Chemical.chemicalId
+
+Ref: ChemicalEntry.tankId > Tank.tankId
+
+Ref: ChemicalEntry.processInstanceId > ProcessInstance.processInstanceId
+
+Ref: ChemicalEntry.addedBy > Worker.workerId
+
+Ref: ChannelFlow.channelId > Channel.channelId
+
+Ref: FurnaceRun.furnaceId > Furnace.furnaceId
+
+Ref: ContainerFill.containerId > Container.containerId
+
+Ref: WarehouseLocation.warehouseId > Warehouse.warehouseId
+
+Ref: Inventory.lotId > ProductLot.lotId
+
+Ref: Inventory.locationId > WarehouseLocation.locationId
+
+Ref: ProcessStepDefinition.processId > ProcessDefinition.processId
+
+Ref: ProcessInstance.processId > ProcessDefinition.processId
+
+Ref: ProcessStepInstance.processInstanceId > ProcessInstance.processInstanceId
+
+Ref: ProcessStepInstance.stepId > ProcessStepDefinition.stepId
+
+Ref: QcRecord.inspectedBy > Worker.workerId
+
+Ref: ActionRecord.performedBy > Worker.workerId
+
+Ref: StateHistory.changedBy > Worker.workerId

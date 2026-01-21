@@ -1,4 +1,3 @@
-// src/core/domain/interfaces/IHarvestBatchRepository.ts
 import { HarvestBatch } from '../entities/HarvestBatch'; 
 
 export interface IHarvestBatchRepository {
