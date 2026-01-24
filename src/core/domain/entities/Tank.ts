@@ -25,10 +25,30 @@ export class Tank extends Entity<TankProps> {
     public canReceive(amount: number): boolean {
         return (this.props.currentLevel + amount) <= this.props.capacity;
     }
-    //tăng sức chứa
-    public receive(weight: number): number {
-        return this.props.currentLevel += weight;
+    //Nhận mủ từ xe
+    public accumulateLatex(amount: number): void {
+        this.props.currentLevel += amount;
+        this.props.status = 'ACCUMULATING';
     }
+    //Chốt tank để QC
+    public lockForQc(): void {
+        this.props.status = 'AWAITING_QC';
+    }
+    //Tank -> Ferment Tank
+    public startFermentation(processId: string): void {
+        this.props.currentProcessId = processId;
+        this.props.status = 'FERMENTING';
+    }
+    //Hứng mủ ly tâm
+    public startFilling(processId: string): void {
+        this.props.currentProcessId = processId;
+        this.props.status = 'FILLING';
+    }
+    //Đóng bồn thành phẩm
+    public closeTank(): void {
+        this.props.status = 'CLOSED';
+    }
+    
     //Assign trạng thái tank
     public assignProcessInstance(processDefinitionId: string): void {
         this.props.status = 'PLANNED';
@@ -36,7 +56,7 @@ export class Tank extends Entity<TankProps> {
     }
     //Status Transition
     public startFermenting(): void {
-        if(this.props.status !== 'PLANNED') {
+        if (this.props.status !== 'PLANNED') {
             throw new AppError('Tank must be in PLANNED status to start fermenting', 400);
         }
         this.props.status = 'FERMENTING';

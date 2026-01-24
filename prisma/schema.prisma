@@ -17,6 +17,8 @@ enum LatexType {
   DONG
   DAY
   CHEN
+  KEM
+  SKIM
 }
 
 enum BatchStatus {
@@ -59,6 +61,12 @@ enum ProductType {
   SVR10
 }
 
+enum ProcessStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+}
+
 enum ProcessStepStatus {
   PENDING
   IN_PROGRESS
@@ -67,16 +75,36 @@ enum ProcessStepStatus {
 }
 
 enum TankStatus {
-  AVAILABLE
-  PLANNED
-  FERMENTING
-  MAINTENANCE
+  AVAILABLE // Rỗng, sạch sẽ
+  ACCUMULATING // Đang nhận mủ từ xe (Hồ Tiếp Nhận)
+  AWAITING_QC // Đầy/Chốt, chờ KCS
+  PENDING_TREATMENT // Đã có kết quả QC, chờ pha chế/xử lý
+  FERMENTING // Đang ủ (Process bắt đầu)
+  FILLING // Đang hứng mủ kem (Bồn trung chuyển/Thành phẩm)
+  CLOSED // Đã đóng bồn (Thành phẩm đầy)
+
+  // Trạng thái xử lý sự cố
+  TREATING // Đang xử lý hóa chất tại chỗ
+  PENDING_DECISION // Chờ duyệt phương án
+  PENDING_MIX // Chờ trộn
+  READY_TO_STORE // Đạt chuẩn, chờ bơm đi
+  STORED // Lưu kho an toàn
+  REPROCESS // Mủ hỏng, phải hồi quy
 }
 
-enum ProcessStatus {
-  PLANNED
-  IN_PROGRESS
-  COMPLETED
+enum QcStage {
+  VEHICLE_RECEIVING // Mủ trên xe
+  RECEPTION_TANK // Mủ trong hồ tiếp nhận (Giai đoạn 1)
+  TRANSFER_TANK // Mủ kem bồn trung chuyển (Giai đoạn 3)
+  FINISHED_TANK // Mủ kem bồn thành phẩm (Giai đoạn 4)
+}
+
+enum TreatmentDecision {
+  APPROVED // Duyệt
+  ADJUST_IN_PLACE // Ủ lại tại bồn
+  PLAN_REQUIRED // Yêu cầu phương án bơm (cho lỗi DRC)
+  MIX_WITH_OTHER // Trộn
+  REPROCESS_VFA // Hồi quy
 }
 
 // II. CORE MASTER DATA
@@ -172,7 +200,7 @@ model Tank {
   currentLevel Float      @default(0)
   status       TankStatus @default(AVAILABLE)
 
-  currentProcessId String?          @unique @db.Uuid
+  currentProcessId String?          @db.Uuid
   currentProcess   ProcessInstance? @relation(fields: [currentProcessId], references: [processInstanceId])
 
   entries   MaterialEntry[]
@@ -337,7 +365,7 @@ model ProcessInstance {
 
   process         ProcessDefinition?    @relation(fields: [processId], references: [processId])
   steps           ProcessStepInstance[]
-  tank            Tank?
+  tank            Tank[]
   chemicalEntries ChemicalEntry[]
 }
 
@@ -357,14 +385,19 @@ model ProcessStepInstance {
 
 // IX. QC & ACTION
 model QcRecord {
-  qcId        String   @id @default(uuid()) @db.Uuid
-  entityType  String
-  entityId    String   @db.Uuid
-  qcType      String?
-  result      QcResult
-  inspectedBy String?  @db.Uuid
-  inspectedAt DateTime
-  remark      String?
+  qcId         String             @id @default(uuid()) @db.Uuid
+  entityType   String
+  entityId     String             @db.Uuid
+  qcType       String?
+  result       QcResult
+  inspectedBy  String?            @db.Uuid
+  inspectedAt  DateTime
+  remark       String?
+  testMetrics  Json?
+  decision     TreatmentDecision?
+  decisionNote String?
+  approvedBy   String?            @db.Uuid
+  approvedAt   DateTime?
 
   worker Worker? @relation(fields: [inspectedBy], references: [workerId])
 }

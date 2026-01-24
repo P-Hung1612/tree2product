@@ -83,7 +83,7 @@ Table Tank {
   capacity Float [not null]
   currentLevel Float [not null, default: 0]
   status TankStatus [not null, default: 'AVAILABLE']
-  currentProcessId String [unique]
+  currentProcessId String
   currentProcess ProcessInstance
   entries MaterialEntry [not null]
   chemicals ChemicalEntry [not null]
@@ -233,7 +233,7 @@ Table ProcessInstance {
   status ProcessStatus [not null, default: 'PLANNED']
   process ProcessDefinition
   steps ProcessStepInstance [not null]
-  tank Tank
+  tank Tank [not null]
   chemicalEntries ChemicalEntry [not null]
 }
 
@@ -259,6 +259,11 @@ Table QcRecord {
   inspectedBy String
   inspectedAt DateTime [not null]
   remark String
+  testMetrics Json
+  decision TreatmentDecision
+  decisionNote String
+  approvedBy String
+  approvedAt DateTime
   worker Worker
 }
 
@@ -304,6 +309,8 @@ Enum LatexType {
   DONG
   DAY
   CHEN
+  KEM
+  SKIM
 }
 
 Enum BatchStatus {
@@ -346,6 +353,12 @@ Enum ProductType {
   SVR10
 }
 
+Enum ProcessStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+}
+
 Enum ProcessStepStatus {
   PENDING
   IN_PROGRESS
@@ -355,15 +368,33 @@ Enum ProcessStepStatus {
 
 Enum TankStatus {
   AVAILABLE
-  PLANNED
+  ACCUMULATING
+  AWAITING_QC
+  PENDING_TREATMENT
   FERMENTING
-  MAINTENANCE
+  FILLING
+  CLOSED
+  TREATING
+  PENDING_DECISION
+  PENDING_MIX
+  READY_TO_STORE
+  STORED
+  REPROCESS
 }
 
-Enum ProcessStatus {
-  PLANNED
-  IN_PROGRESS
-  COMPLETED
+Enum QcStage {
+  VEHICLE_RECEIVING
+  RECEPTION_TANK
+  TRANSFER_TANK
+  FINISHED_TANK
+}
+
+Enum TreatmentDecision {
+  APPROVED
+  ADJUST_IN_PLACE
+  PLAN_REQUIRED
+  MIX_WITH_OTHER
+  REPROCESS_VFA
 }
 
 Ref: HarvestBatch.workerId > Worker.workerId
@@ -378,7 +409,7 @@ Ref: VehicleLoad.vehicleId > Vehicle.vehicleId
 
 Ref: VehicleLoad.loadedBy > Worker.workerId
 
-Ref: Tank.currentProcessId - ProcessInstance.processInstanceId
+Ref: Tank.currentProcessId > ProcessInstance.processInstanceId
 
 Ref: MaterialEntry.tankId > Tank.tankId
 

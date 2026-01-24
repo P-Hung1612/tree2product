@@ -32,14 +32,15 @@ export class ReceiveLoadToTankUseCase {
             throw new AppError('This load has already unloaded!', 400);
         }
         //Kiểm tra tình trạng tank
-        if (tank.status === "PROCESSING" || tank.status === "MAINTAINING") {
+        if (tank.status !== "AVAILABLE" && tank.status !== "ACCUMULATING") {
             throw new AppError('Tank not ready to receive load', 400);
         }
         //Kiểm tra sức chứa
         if (!tank.canReceive(dto.weight)) {
             throw new AppError('Tank overflow', 400);
         }
-        //Thực thi thay đổi trạng thái
+        //Cộng dồn mủ
+        tank.accumulateLatex(dto.weight);
         //Tạo phiếu Material Entry
         const materialEntry = MaterialEntry.create({
             tankId: dto.tankId,
@@ -47,8 +48,7 @@ export class ReceiveLoadToTankUseCase {
             netWeight: dto.weight,
             receivedAt: new Date(),
         }, load.latexType);
-        //Tăng mức chứa
-        tank.receive(dto.weight);
+        
         //Update status cho xe
         load.unload();
         //Tạo trace link
